@@ -1,122 +1,177 @@
-import { useState } from 'react'
-import heroImg from './assets/hero.png'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import './App.css'
+
+import { useState } from "react";
+import "./App.css";
+
+const initialBooks = [
+  { id: 1, title: "Atomic Habits", author: "James Clear", year: 2018 },
+  { id: 2, title: "The Alchemist", author: "Paulo Coelho", year: 1988 },
+  { id: 3, title: "Clean Code", author: "Robert C. Martin", year: 2008 },
+];
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [books, setBooks] = useState(initialBooks);
+  const [title, setTitle] = useState("");
+  const [author, setAuthor] = useState("");
+  const [year, setYear] = useState("");
+  const [editingId, setEditingId] = useState(null);
+  const [message, setMessage] = useState("");
+
+  function fetchBooks() {
+    setBooks([...initialBooks]);
+    setMessage("Sample books fetched successfully!");
+  }
+
+  function handleSubmit(e) {
+    e.preventDefault();
+
+    if (editingId !== null) {
+      setBooks((previous) =>
+        previous.map((book) =>
+          book.id === editingId
+            ? { ...book, title, author, year: Number(year) }
+            : book
+        )
+      );
+      setMessage("Book updated successfully!");
+      setEditingId(null);
+    } else {
+      const newBook = {
+        id: Date.now(),
+        title,
+        author,
+        year: Number(year),
+      };
+
+      setBooks((previous) => [...previous, newBook]);
+      setMessage("Book added successfully!");
+    }
+
+    setTitle("");
+    setAuthor("");
+    setYear("");
+  }
+
+  function editBook(book) {
+    setEditingId(book.id);
+    setTitle(book.title);
+    setAuthor(book.author);
+    setYear(String(book.year));
+    setMessage(`Editing: ${book.title}`);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function deleteBook(id) {
+    setBooks((previous) => previous.filter((book) => book.id !== id));
+    if (editingId === id) {
+      setEditingId(null);
+      setTitle("");
+      setAuthor("");
+      setYear("");
+    }
+    setMessage("Book deleted successfully!");
+  }
+
+  function cancelEdit() {
+    setEditingId(null);
+    setTitle("");
+    setAuthor("");
+    setYear("");
+    setMessage("");
+  }
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
+    <div className="container">
+      <div className="header">
         <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
+          <h1>Book Management System</h1>
+          <p>Manage your book collection easily</p>
         </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
+        <button className="fetch-btn" onClick={fetchBooks}>
+          Fetch Books
         </button>
-      </section>
+      </div>
 
-      <div className="ticks"></div>
+      <div className="form-section">
+        <h2>{editingId !== null ? "Edit Book" : "Add New Book"}</h2>
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
+        <form onSubmit={handleSubmit}>
+          <input
+            placeholder="Book Title"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            required
+          />
+
+          <input
+            placeholder="Author"
+            value={author}
+            onChange={(e) => setAuthor(e.target.value)}
+            required
+          />
+
+          <input
+            type="number"
+            placeholder="Publication Year"
+            value={year}
+            onChange={(e) => setYear(e.target.value)}
+            required
+          />
+
+          <button type="submit">
+            {editingId !== null ? "Update Book" : "Add Book"}
+          </button>
+
+          {editingId !== null && (
+            <button
+              type="button"
+              className="cancel-btn"
+              onClick={cancelEdit}
+            >
+              Cancel
+            </button>
+          )}
+        </form>
+      </div>
+
+      {message && <p className="message">{message}</p>}
+
+      <div className="list-header">
+        <h2>Books List</h2>
+        <span>{books.length} Books</span>
+      </div>
+
+      {books.length === 0 ? (
+        <p className="empty">No books available.</p>
+      ) : (
+        <div className="book-list">
+          {books.map((book) => (
+            <div className="book-card" key={book.id}>
+              <div className="book-details">
+                <h3>{book.title}</h3>
+                <p>Author: {book.author}</p>
+                <p>Publication Year: {book.year}</p>
+              </div>
+
+              <div className="actions">
+                <button
+                  className="edit-btn"
+                  onClick={() => editBook(book)}
+                >
+                  Edit
+                </button>
+                <button
+                  className="delete-btn"
+                  onClick={() => deleteBook(book.id)}
+                >
+                  Delete
+                </button>
+              </div>
+            </div>
+          ))}
         </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+      )}
+    </div>
+  );
 }
 
-export default App
+export default App;
